@@ -8,7 +8,8 @@
       "minified": true,
       "compact": true,
       "plugins": [
-        'remove-comments',
+        "remove-comments",
+        "transform-object-assign"
       ]
     }
   }

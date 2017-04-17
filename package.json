@@ -1,7 +1,7 @@
 {
   "name": "bibcnrs-button",
   "description": "BibCNRS button for a quick access to the fulltext shown near the found DOI in the visited pages",
-  "version": "1.0.0",  
+  "version": "1.0.0",
   "contributors": [
     {
       "name": "Stéphane Gully",
@@ -16,7 +16,7 @@
     "patchmanifest:3": "jq \".description=$(jq .description package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
     "babel:copyfiles": "BABEL_ENV=production babel ./app/ --out-dir ./dist/ --copy-files",
     "babel:build-prod": "BABEL_ENV=production babel ./app/ --out-dir ./dist/",
-    "build:prod": "npm-run-all babel:copyfiles patchmanifest:* babel:build-prod",
+    "build:prod": "rm -rf ./dist && npm-run-all babel:copyfiles patchmanifest:* babel:build-prod",
     "babel:debug": "BABEL_ENV=developement babel ./app/ --watch --out-dir ./dist/ --copy-files",
     "web-ext": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4",
     "debug": "npm-run-all --parallel babel:debug web-ext"
@@ -27,6 +27,7 @@
   "devDependencies": {
     "babel-cli": "^6.22.2",
     "babel-plugin-remove-comments": "^2.0.0",
+    "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-preset-latest": "^6.22.0",
     "npm-run-all": "^4.0.2"
   },
