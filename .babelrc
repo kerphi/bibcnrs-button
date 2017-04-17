@@ -1,0 +1,15 @@
+{
+  "presets": [ "latest" ],
+  "plugins": [],
+  "env": {
+    "development": {
+    },
+    "production": {
+      "minified": true,
+      "compact": true,
+      "plugins": [
+        'remove-comments',
+      ]
+    }
+  }
+}
