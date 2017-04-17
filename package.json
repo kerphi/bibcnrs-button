@@ -1,6 +1,6 @@
 {
   "name": "bibcnrs-button",
-  "description": "BibCNRS button for a short access to the fulltext shown near the found DOI in the visited pages",
+  "description": "BibCNRS button for a quick access to the fulltext shown near the found DOI in the visited pages",
   "version": "1.0.0",  
   "contributors": [
     {

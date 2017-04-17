@@ -1,6 +1,6 @@
 # bibcnrs-button
 
-BibCNRS button for a short access to the fulltext shown near the found DOI in the visited pages
+BibCNRS button for a quick access to the fulltext shown near the found DOI in the visited pages
 
 ## Developers
 
