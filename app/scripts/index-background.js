@@ -1,4 +1,4 @@
-//import {$,jQuery} from 'jquery';
+import 'babel-polyfill';
 
 console.log('Hello world !');
 
