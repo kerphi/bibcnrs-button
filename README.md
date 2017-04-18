@@ -12,4 +12,7 @@ It will build and watch app/ scripts and transpile it (thanks to babel) into dis
 
 It will compile all the things ready for production in dist/ folder.
 
+### npm run debug:prod
+
+It will launch a firefox on the production build produced by build:prod. Used to debug production tricks.
 

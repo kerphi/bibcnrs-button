@@ -9,11 +9,24 @@
   },
   "background": {
     "scripts": [
-      "scripts/background.js"
+      "scripts/index-background.js"
     ]
   },
   "permissions": [
     "<all_urls>",
     "tabs"
-  ]
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "scripts/index-content.js"
+      ],
+      "css":[
+        "css/content.css"
+      ]
+    }
+  ]  
 }
