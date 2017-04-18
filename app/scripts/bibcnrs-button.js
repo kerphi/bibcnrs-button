@@ -1,4 +1,6 @@
-var util       = require('util');
+var $ = require('jquery');
+
+var util = require('util');
 
 var EventEmitter = require('events').EventEmitter;
 function BibCNRSButton(options) {
@@ -13,6 +15,8 @@ module.exports = BibCNRSButton;
 BibCNRSButton.prototype.myAction = function (data) {
   var self = this;
   console.log('MY ACTION', data);
+  $('body').attr('data-ok', 'test');
+  $('p').css('color', 'red');
 };
 
 module.exports = BibCNRSButton;
