@@ -27,7 +27,7 @@
     "watchify:images": "mkdir -p dist/images/ && watch 'cp -f ./app/images/* ./dist/images/ && echo \"-> images/ copy [$(date +%T)]\"' ./app/images/",
     "web-ext:debug": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url test/doi.html",
     "debug": "npm-run-all --parallel watchify:* web-ext:debug",
-    "web-ext:real": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4",
+    "web-ext:real": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4 --start-url https://link.springer.com/article/10.1007/s12205-015-1634-z --start-url https://link.springer.com/article/10.1007%2Fs10728-017-0342-x",
     "debug:real": "npm-run-all --parallel watchify:* web-ext:real",
     "debug:prod": "npm-run-all build:prod web-ext"
   },
