@@ -133,32 +133,32 @@ BibCNRSButton.prototype.textWalker = function () {
   // just select elements in the DOM containing
   // text with likely contained DOI
   $(":contains(10.)").filter(function () {
+
     // filter top level DOM element, just keep the leafs
     let isALeaf = ($(this).children().length === 0);
     // or keep floating text matching the simple DOI pattern
     let hasFistLevelTextMatching = ($(this).justtext().indexOf('10.') !== -1);
-    // skip links cause it should be walked by hrefWalker
-    let isAnchor = ($(this).nodeName == 'A');
+    // skip already handled links
+    let isAVisitedLink = $(this).hasClass('bibcnrs-button-link-visited');
 
-    let isParentAVisitedLink = $(this).hasClass('bibcnrs-button-link-visited');
-    console.log('DEBUGEEE', isParentAVisitedLink, isAnchor, isALeaf, hasFistLevelTextMatching, $(this).justtext());
-
-    return !isAnchor && !isParentAVisitedLink && (isALeaf || hasFistLevelTextMatching);
+    return !isAVisitedLink && (isALeaf || hasFistLevelTextMatching);
   }).each(function (idX, elt) {
 
-    // insert HTML link around the DOI
-    var htmlWithDoiLink = $(elt).html().replace(
-      self.doiPatternInText,
-      '<a href="http://dx.doi.org/$1" class="bibcnrs-button-link-visited">$1</a>'
-    );
-    $(elt).html(htmlWithDoiLink);
+    setTimeout(() => {
+      // insert HTML link around the DOI
+      var htmlWithDoiLink = $(elt).html().replace(
+        self.doiPatternInText,
+        '<a href="http://dx.doi.org/$1" class="bibcnrs-button-link-visited">$1</a>'
+      );
+      $(elt).html(htmlWithDoiLink);
 
-    // send the DOI links to the button hooking queue
-    $(elt).find('a.bibcnrs-button-link-visited').each(function (idX, doiLinkElt) {
-      setTimeout(() => {
-        self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
-      }, 10);
-    });
+      // send the DOI links to the button hooking queue
+      $(elt).find('a.bibcnrs-button-link-visited').each(function (idX, doiLinkElt) {
+        setTimeout(() => {
+          self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
+        }, 10);
+      });
+    }, 10);
 
   });
 
