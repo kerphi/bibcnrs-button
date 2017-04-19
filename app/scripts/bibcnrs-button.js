@@ -103,10 +103,11 @@ BibCNRSButton.prototype.tryToHookAButton = function (btnData, cb) {
 };
 
 
-BibCNRSButton.prototype.hrefWalker = function () {
+BibCNRSButton.prototype.hrefWalker = function (rootElt) {
   var self = this;
+  rootElt = rootElt || document.documentElement;
 
-  $('a').each((idX, elt) => {
+  $(rootElt).find('a').each((idX, elt) => {
 
     // skip already visited links
     if ($(elt).hasClass('bibcnrs-button-link-visited')) return;
@@ -124,12 +125,13 @@ BibCNRSButton.prototype.hrefWalker = function () {
   });
 };
 
-BibCNRSButton.prototype.textWalker = function () {
+BibCNRSButton.prototype.textWalker = function (rootElt) {
   var self = this;
+  rootElt = rootElt || document.documentElement;
 
   // just select elements in the DOM containing
   // text with likely contained DOI
-  $(":contains(10.)").filter(function () {
+  $(rootElt).find(":contains(10.)").filter(function () {
 
     // filter top level DOM element, just keep the leafs
     let isALeaf = ($(this).children().length === 0);
@@ -145,13 +147,14 @@ BibCNRSButton.prototype.textWalker = function () {
       // insert HTML link around the DOI
       var htmlWithDoiLink = $(elt).html().replace(
         self.doiPatternInText,
-        '<a href="http://dx.doi.org/$1" class="bibcnrs-button-link-visited">$1</a>'
+        '<a href="" class="bibcnrs-button-link-visited">$1</a>'
       );
       $(elt).html(htmlWithDoiLink);
 
       // send the DOI links to the button hooking queue
       $(elt).find('a.bibcnrs-button-link-visited').each(function (idX, doiLinkElt) {
         setTimeout(() => {
+          $(doiLinkElt).attr('href', 'http://dx.doi.org/' + $(doiLinkElt).text());
           self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
         }, 10);
       });
@@ -159,6 +162,19 @@ BibCNRSButton.prototype.textWalker = function () {
 
   });
 
+};
+
+/**
+ * Listen for DOM dynamic modifications
+ * and walk into it to try to detect DOI inside.
+ */
+BibCNRSButton.prototype.watchDomModifications = function () {
+  var self = this;
+  $(document).bind("DOMSubtreeModified", function (event) {
+    if ($(event.target).hasClass('bibcnrs-button-link-visited')) return;
+    self.hrefWalker(event.target);
+    self.textWalker(event.target);
+  });
 };
 
 

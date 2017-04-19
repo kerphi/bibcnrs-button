@@ -8,5 +8,17 @@
       <li>it is two doi included in the text: 10.1111/sed.12038 and 10.1111/oli.12023</li>
       <li>a <abbr title="Digital Object Identifier">DOI</abbr> in the text with another HTML element just before : 10.1111/tbed.12001</li>
     </ul>
+    <script>
+      setTimeout(function () {
+        var p = document.createElement("p");
+        p.innerHTML = '<p>10.1007/s00701-016-2835-z</p>';
+        document.body.appendChild(p);
+      }, 3000);
+      setTimeout(function () {
+        var p = document.createElement("p");
+        p.innerHTML = '<a href="https://dx.doi.org/10.1038/141913a0">dynamic doi link</a>';
+        document.body.appendChild(p);
+      }, 3500);
+    </script>
   </body>
 </html>
