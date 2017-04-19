@@ -24,6 +24,7 @@
     "watchify:content": "watchify app/scripts/index-content.js -t babelify --outfile dist/scripts/index-content.js -v",
     "watchify:background": "watchify app/scripts/index-background.js -t babelify --outfile dist/scripts/index-background.js -v",
     "watchify:less": "mkdir -p dist/css/ && watch 'lessc ./app/css/content.less > dist/css/content.css && echo \"-> content.css written [$(date +%T)]\"' ./app/css/",
+    "watchify:images": "mkdir -p dist/images/ && watch 'cp -f ./app/images/* ./dist/images/ && echo \"-> images/ copy [$(date +%T)]\"' ./app/images/",
     "web-ext": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4",
     "debug": "npm-run-all --parallel watchify:* web-ext",
     "debug-prod": "npm-run-all build:prod web-ext"
