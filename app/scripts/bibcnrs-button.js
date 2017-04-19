@@ -93,7 +93,7 @@ BibCNRSButton.prototype.tryToHookAButton = function (btnData, cb) {
   console.log('HOOK A BUTTON ON THIS DOI', btnData.foundDoi, btnData.btnUrl);
 
   var domBtnLink = $('<a target="_blank" href="" class="bibcnrs-button-link"></a>').attr('href', btnData.btnUrl);
-  var domBtnBox  = $('<span class="bibcnrs-button-box"></span').text('INEE');
+  var domBtnBox  = $('<span class="bibcnrs-button-box"></span').text('BibCNRS INEE');
   var domBtnIcon = $('<span class="bibcnrs-button-icon"></span>');
 
   domBtnLink.append(domBtnBox);
