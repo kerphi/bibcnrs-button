@@ -14,11 +14,12 @@
     "patchmanifest:1": "jq \".version=$(jq .version package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
     "patchmanifest:2": "jq \".name=$(jq .name package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
     "patchmanifest:3": "jq \".description=$(jq .description package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
-    "build:copyfiles": "mkdir -p ./dist/scripts/ ; cp -r ./app/images/ ./app/css/ ./app/manifest.json ./dist/",
-    "build:prod": "NODE_ENV=production ; rm -rf ./dist && npm-run-all build:copyfiles patchmanifest:* browserify:* build:minify*",
+    "build:copyfiles": "mkdir -p ./dist/scripts/ ; mkdir -p ./dist/css/ ; cp -r ./app/images/ ./app/manifest.json ./dist/",
+    "build:prod": "NODE_ENV=production ; rm -rf ./dist && npm-run-all build:copyfiles patchmanifest:* browserify:* build:minify* build:less",
     "build:debug": "NODE_ENV=developement ; rm -rf ./dist && npm-run-all build:copyfiles patchmanifest:* browserify:*",
     "build:minify-content": "uglifyjs dist/scripts/index-content.js > dist/scripts/index-content.min.js ; mv dist/scripts/index-content.min.js dist/scripts/index-content.js",
     "build:minify-background": "uglifyjs dist/scripts/index-background.js > dist/scripts/index-background.min.js ; mv dist/scripts/index-background.min.js dist/scripts/index-background.js",
+    "build:less": "mkdir -p dist/css/ && lessc ./app/css/content.less > dist/css/content.css",
     "browserify:content": "browserify app/scripts/index-content.js -t babelify --outfile dist/scripts/index-content.js -v",
     "browserify:background": "browserify app/scripts/index-background.js -t babelify --outfile dist/scripts/index-background.js -v",
     "watchify:content": "watchify app/scripts/index-content.js -t babelify --outfile dist/scripts/index-content.js -v",
@@ -29,7 +30,7 @@
     "debug": "npm-run-all --parallel watchify:* web-ext:debug",
     "web-ext:real": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4 --start-url https://link.springer.com/article/10.1007/s12205-015-1634-z --start-url https://link.springer.com/article/10.1007%2Fs10728-017-0342-x",
     "debug:real": "npm-run-all --parallel watchify:* web-ext:real",
-    "debug:prod": "npm-run-all build:prod web-ext"
+    "debug:prod": "npm-run-all build:prod web-ext:debug"
   },
   "engines": {
     "node": ">=6.10.2"
