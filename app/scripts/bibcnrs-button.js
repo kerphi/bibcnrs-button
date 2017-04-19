@@ -1,16 +1,5 @@
 
-// todo move in a dedicated module
-var $ = require('jquery');
-$.fn.justtext = function() {
-  
-  return $(this)  .clone()
-      .children()
-      .remove()
-      .end()
-      .text();
-
-};
-
+import $     from './bibcnrs-jquery.js';
 import queue from 'async/queue';
 
 
