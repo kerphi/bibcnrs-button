@@ -1,6 +1,18 @@
+
+// todo move in a dedicated module
+var $ = require('jquery');
+$.fn.justtext = function() {
+  
+  return $(this)  .clone()
+      .children()
+      .remove()
+      .end()
+      .text();
+
+};
+
 import queue from 'async/queue';
 
-var $ = require('jquery');
 
 function debug(obj) { return JSON.stringify(obj); };
 
@@ -100,7 +112,8 @@ BibCNRSButton.prototype.hrefWalker = function () {
   $('a').each((idX, elt) => {
 
     // skip already visited links
-    if ($(elt).hasClass('bibcnrs-button-doi-visited')) return;
+    if ($(elt).hasClass('bibcnrs-button-link-visited')) return;
+    $(elt).addClass('bibcnrs-button-link-visited');
 
     setTimeout(() => {
       elt.href = decodeURIComponent(elt.href);
@@ -108,7 +121,6 @@ BibCNRSButton.prototype.hrefWalker = function () {
       if (matches && matches[2]) {
         let doi = matches[2];
         console.log('DOI FOUND', doi);
-        $(elt).addClass('bibcnrs-button-doi-visited');
         self.queue.push({ foundDoi: doi, domElt: elt });
       }
     }, 10);
@@ -122,22 +134,27 @@ BibCNRSButton.prototype.textWalker = function () {
   // text with likely contained DOI
   $(":contains(10.)").filter(function () {
     // filter top level DOM element, just keep the leafs
-    return $(this).children().length === 0;
-  }).each(function (idX, elt) {
-
+    let isALeaf = ($(this).children().length === 0);
+    // or keep floating text matching the simple DOI pattern
+    let hasFistLevelTextMatching = ($(this).justtext().indexOf('10.') !== -1);
     // skip links cause it should be walked by hrefWalker
-    //if ($(elt).hasClass('bibcnrs-button-doi-visited')) return;
-    if (elt.nodeName == 'A') return;
+    let isAnchor = ($(this).nodeName == 'A');
+
+    let isParentAVisitedLink = $(this).hasClass('bibcnrs-button-link-visited');
+    console.log('DEBUGEEE', isParentAVisitedLink, isAnchor, isALeaf, hasFistLevelTextMatching, $(this).justtext());
+
+    return !isAnchor && !isParentAVisitedLink && (isALeaf || hasFistLevelTextMatching);
+  }).each(function (idX, elt) {
 
     // insert HTML link around the DOI
     var htmlWithDoiLink = $(elt).html().replace(
       self.doiPatternInText,
-      '<a href="http://dx.doi.org/$1" class="bibcnrs-button-doi-visited">$1</a>'
+      '<a href="http://dx.doi.org/$1" class="bibcnrs-button-link-visited">$1</a>'
     );
     $(elt).html(htmlWithDoiLink);
 
     // send the DOI links to the button hooking queue
-    $(elt).find('a.bibcnrs-button-doi-visited').each(function (idX, doiLinkElt) {
+    $(elt).find('a.bibcnrs-button-link-visited').each(function (idX, doiLinkElt) {
       setTimeout(() => {
         self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
       }, 10);
