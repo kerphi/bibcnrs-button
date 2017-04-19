@@ -172,8 +172,8 @@ BibCNRSButton.prototype.watchDomModifications = function () {
   var self = this;
   $(document).bind("DOMSubtreeModified", function (event) {
     if ($(event.target).hasClass('bibcnrs-button-link-visited')) return;
-    self.hrefWalker(event.target);
-    self.textWalker(event.target);
+    // self.hrefWalker(event.target);
+    // self.textWalker(event.target);
   });
 };
 
