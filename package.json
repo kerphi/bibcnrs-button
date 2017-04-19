@@ -51,6 +51,8 @@
   },
   "dependencies": {
     "async": "^2.3.0",
-    "jquery": "^3.2.1"
+    "browserify-shim": "^3.8.14",
+    "jquery": "^3.2.1",
+    "lscache": "^1.1.0"
   }
 }

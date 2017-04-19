@@ -1,17 +1,19 @@
-
-import $     from './bibcnrs-jquery.js';
-import queue from 'async/queue';
-
+import $       from './bibcnrs-jquery.js';
+import queue   from 'async/queue';
+import lscache from 'lscache';
+import util    from 'util';
 
 function debug(obj) { return JSON.stringify(obj); };
-
-var util = require('util');
 
 var EventEmitter = require('events').EventEmitter;
 function BibCNRSButton(options) {
   var self  = this;
 
   options          = options || {};
+  
+  // 1 mounth by default for the cache
+  self.cacheTTL    = options.cacheTTL || 60*24*30; 
+
   self.myopt       = options.myopt || 'coucou';
   self.doiPatternInURL  = /\/\/(doi\.org|dx\.doi\.org|doi\.acm\.org|dx\.crossref\.org).*\/(10\..*(\/|%2(F|f)).*)/;
   self.doiPatternInText = new RegExp('(10\\.\\d{4,5}\\/[\\S]+[^;,.\\s])', 'gi');
@@ -22,6 +24,7 @@ function BibCNRSButton(options) {
   self.queue = queue(
     (btnData, cb) => {
       self.checkIfDoiIsAvailable(btnData, function (found, btnData2) {
+        console.log('MMMMM', found, debug(btnData2));
         if (found) {
           self.tryToHookAButton(btnData2, cb);
         } else {
@@ -42,29 +45,34 @@ module.exports = BibCNRSButton;
 BibCNRSButton.prototype.checkIfDoiIsAvailable = function (btnData, cb) {
   var self = this;
 
-  // if (btnData.foundDoi !== '10.1103/PhysRevLett.98.175302') {
-  //   return cb(0);
-  // }
+  // check if this AJAX response is stored in the cache or not
+  let cachedData = lscache.get(btnData.foundDoi)
+  if (cachedData) {
+    if (cachedData.found) {
+      console.log('DOI IS AVAILABLE (cached)', btnData.foundDoi);
+    } else {
+      console.log('DOI IS NOT AVAILABLE (cached)', btnData.foundDoi);
+    }
+    return cb(cachedData.found, Object.assign({}, btnData, cachedData));
+  }
 
-  // btnData.foundDoi = '10.1007/s00701-016-2835-z';
-
-  // matching url:
+  // ok matching url example:
   // http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:10.1007/s00701-016-2835-z&direct=true&site=ftf-live
+
+  // not in the cache so ask EBSCO !
   $.ajax({
     url: 'http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:' + btnData.foundDoi + '&direct=true&site=ftf-live',
     success : function(data) {
       var proxyUrl = $(data).find('a[data-auto=guest-login-link]').attr('href');
       proxyUrl = proxyUrl.split('?url=')[0] + '?url=';
-
       var linkoutUrl = $(data).find('div.ftf-results a[data-auto=menu-link]').attr('href');
-//      linkoutUrl = 'http://resolver.ebscohost.com' + linkoutUrl;
-      
       if (linkoutUrl) {
-        console.log('DOI IS AVAILABLE', linkoutUrl, proxyUrl + this.url);
+        console.log('DOI IS AVAILABLE', btnData.foundDoi);
+        lscache.set(btnData.foundDoi, { found: 1, btnUrl: proxyUrl + this.url }, self.cacheTTL);
         return cb(1, Object.assign({}, btnData, { btnUrl: proxyUrl + this.url }));
-        return 
       } else {
-        console.log('DOI IS NOT AVAILABLE', linkoutUrl, this.url);
+        console.log('DOI IS NOT AVAILABLE', btnData.foundDoi);
+        lscache.set(btnData.foundDoi, { found: 0 }, self.cacheTTL);
         return cb(0);
       }
     },
