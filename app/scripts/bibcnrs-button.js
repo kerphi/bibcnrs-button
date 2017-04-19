@@ -12,8 +12,9 @@ function BibCNRSButton(options) {
 
   options          = options || {};
   self.myopt       = options.myopt || 'coucou';
-  self.doiPattern = /\/\/(doi\.org|dx\.doi\.org|doi\.acm\.org|dx\.crossref\.org).*\/(10\..*(\/|%2(F|f)).*)/;
-  
+  self.doiPatternInURL  = /\/\/(doi\.org|dx\.doi\.org|doi\.acm\.org|dx\.crossref\.org).*\/(10\..*(\/|%2(F|f)).*)/;
+  self.doiPatternInText = new RegExp('(10\\.\\d{4,5}\\/[\\S]+[^;,.\\s])', 'gi');
+
   // handle found DOI in the DOM asynchrononsly
   // to be gentle with the web browser
   self.queueConcurrency = 1;
@@ -88,7 +89,7 @@ BibCNRSButton.prototype.tryToHookAButton = function (btnData, cb) {
 
   domBtnLink.append(domBtnBox);
   domBtnLink.append(domBtnIcon);
-  domBtnLink.appendTo(btnData.domElt.parentNode);
+  domBtnLink.insertAfter(btnData.domElt);
   return cb();
 };
 
@@ -97,16 +98,53 @@ BibCNRSButton.prototype.hrefWalker = function () {
   var self = this;
 
   $('a').each((idX, elt) => {
+
+    // skip already visited links
+    if ($(elt).hasClass('bibcnrs-button-doi-visited')) return;
+
     setTimeout(() => {
       elt.href = decodeURIComponent(elt.href);
-      let matches = elt.href.match(self.doiPattern);
+      let matches = elt.href.match(self.doiPatternInURL);
       if (matches && matches[2]) {
         let doi = matches[2];
         console.log('DOI FOUND', doi);
+        $(elt).addClass('bibcnrs-button-doi-visited');
         self.queue.push({ foundDoi: doi, domElt: elt });
       }
     }, 10);
   });
+};
+
+BibCNRSButton.prototype.textWalker = function () {
+  var self = this;
+
+  // just select elements in the DOM containing
+  // text with likely contained DOI
+  $(":contains(10.)").filter(function () {
+    // filter top level DOM element, just keep the leafs
+    return $(this).children().length === 0;
+  }).each(function (idX, elt) {
+
+    // skip links cause it should be walked by hrefWalker
+    //if ($(elt).hasClass('bibcnrs-button-doi-visited')) return;
+    if (elt.nodeName == 'A') return;
+
+    // insert HTML link around the DOI
+    var htmlWithDoiLink = $(elt).html().replace(
+      self.doiPatternInText,
+      '<a href="http://dx.doi.org/$1" class="bibcnrs-button-doi-visited">$1</a>'
+    );
+    $(elt).html(htmlWithDoiLink);
+
+    // send the DOI links to the button hooking queue
+    $(elt).find('a.bibcnrs-button-doi-visited').each(function (idX, doiLinkElt) {
+      setTimeout(() => {
+        self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
+      }, 10);
+    });
+
+  });
+
 };
 
 
