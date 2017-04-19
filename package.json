@@ -14,7 +14,7 @@
     "patchmanifest:1": "jq \".version=$(jq .version package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
     "patchmanifest:2": "jq \".name=$(jq .name package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
     "patchmanifest:3": "jq \".description=$(jq .description package.json)\" dist/manifest.json > dist/manifest.tmp.json && mv dist/manifest.tmp.json dist/manifest.json",
-    "build:copyfiles": "mkdir -p ./dist/scripts/ ; cp -r ./app/images/ ./app/manifest.json ./dist/",
+    "build:copyfiles": "mkdir -p ./dist/scripts/ ; cp -r ./app/images/ ./app/css/ ./app/manifest.json ./dist/",
     "build:prod": "NODE_ENV=production ; rm -rf ./dist && npm-run-all build:copyfiles patchmanifest:* browserify:* build:minify*",
     "build:debug": "NODE_ENV=developement ; rm -rf ./dist && npm-run-all build:copyfiles patchmanifest:* browserify:*",
     "build:minify-content": "uglifyjs dist/scripts/index-content.js > dist/scripts/index-content.min.js ; mv dist/scripts/index-content.min.js dist/scripts/index-content.js",
@@ -23,6 +23,7 @@
     "browserify:background": "browserify app/scripts/index-background.js -t babelify --outfile dist/scripts/index-background.js -v",
     "watchify:content": "watchify app/scripts/index-content.js -t babelify --outfile dist/scripts/index-content.js -v",
     "watchify:background": "watchify app/scripts/index-background.js -t babelify --outfile dist/scripts/index-background.js -v",
+    "watchify:less": "mkdir -p dist/css/ && watch 'lessc ./app/css/content.less > dist/css/content.css && echo \"-> content.css written [$(date +%T)]\"' ./app/css/",
     "web-ext": "web-ext run -s ./dist -a ./web-ext-artifacts --browser-console --start-url https://en.wikipedia.org/wiki/Superfluid_helium-4",
     "debug": "npm-run-all --parallel watchify:* web-ext",
     "debug-prod": "npm-run-all build:prod web-ext"
@@ -38,12 +39,15 @@
     "babel-preset-env": "^1.4.0",
     "babelify": "^7.3.0",
     "browserify": "^14.3.0",
+    "less": "^2.7.2",
     "npm-run-all": "^4.0.2",
     "uglify-js": "^2.8.22",
+    "watch": "^1.0.2",
     "watchify": "^3.9.0",
     "web-ext": "^1.8.1"
   },
   "dependencies": {
+    "async": "^2.3.0",
     "jquery": "^3.2.1"
   }
 }
