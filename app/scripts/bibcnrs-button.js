@@ -24,7 +24,6 @@ function BibCNRSButton(options) {
   self.queue = queue(
     (btnData, cb) => {
       self.checkIfDoiIsAvailable(btnData, function (found, btnData2) {
-        console.log('MMMMM', found, debug(btnData2));
         if (found) {
           self.tryToHookAButton(btnData2, cb);
         } else {
@@ -132,15 +131,20 @@ BibCNRSButton.prototype.textWalker = function (rootElt) {
   // just select elements in the DOM containing
   // text with likely contained DOI
   $(rootElt).find(":contains(10.)").filter(function () {
+    
+    let isATextNode = ($(this).nodeType === 3);
 
     // filter top level DOM element, just keep the leafs
     let isALeaf = ($(this).children().length === 0);
     // or keep floating text matching the simple DOI pattern
     let hasFistLevelTextMatching = ($(this).justtext().indexOf('10.') !== -1);
     // skip already handled links
-    let isAVisitedLink = $(this).hasClass('bibcnrs-button-link-visited');
+    console.log('THEBIG ONE', this.nodeName)
+    let isALink = (this.nodeName === 'A');
+    let isAScript = (this.nodeName === 'SCRIPT');
+    let isATextarea = (this.nodeName === 'TEXTAREA');
 
-    return !isAVisitedLink && (isALeaf || hasFistLevelTextMatching);
+    return !isATextNode && !isALink && !isAScript && !isATextarea && (isALeaf || hasFistLevelTextMatching);
   }).each(function (idX, elt) {
 
     setTimeout(() => {
@@ -172,6 +176,7 @@ BibCNRSButton.prototype.watchDomModifications = function () {
   var self = this;
   $(document).bind("DOMSubtreeModified", function (event) {
     if ($(event.target).hasClass('bibcnrs-button-link-visited')) return;
+    // TODO find why it takes a lot of CPU
     // self.hrefWalker(event.target);
     // self.textWalker(event.target);
   });
