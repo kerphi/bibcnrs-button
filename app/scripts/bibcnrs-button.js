@@ -2,8 +2,8 @@ import $       from './bibcnrs-jquery.js';
 import queue   from 'async/queue';
 import lscache from 'lscache';
 import util    from 'util';
+import u       from './bibcnrs-utils.js';
 
-function debug(obj) { return JSON.stringify(obj); };
 
 var EventEmitter = require('events').EventEmitter;
 function BibCNRSButton(options) {
@@ -17,6 +17,7 @@ function BibCNRSButton(options) {
   self.myopt       = options.myopt || 'coucou';
   self.doiPatternInURL  = /\/\/(doi\.org|dx\.doi\.org|doi\.acm\.org|dx\.crossref\.org).*\/(10\..*(\/|%2(F|f)).*)/;
   self.doiPatternInText = new RegExp('(10\\.\\d{4,5}\\/[\\S]+[^;,.\\s])', 'gi');
+  self.skipPattern      = new RegExp('^[:\\/\\s]+$', 'i');
 
   // handle found DOI in the DOM asynchrononsly
   // to be gentle with the web browser
@@ -24,7 +25,7 @@ function BibCNRSButton(options) {
   self.queue = queue(
     (btnData, cb) => {
       self.checkIfDoiIsAvailable(btnData, function (found, btnData2) {
-        console.log('MMMMM', found, debug(btnData2));
+        console.log('MMMMM', found, u.debug(btnData2));
         if (found) {
           self.tryToHookAButton(btnData2, cb);
         } else {
@@ -61,7 +62,7 @@ BibCNRSButton.prototype.checkIfDoiIsAvailable = function (btnData, cb) {
 
   // not in the cache so ask EBSCO !
   $.ajax({
-    url: 'http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:' + btnData.foundDoi + '&direct=true&site=ftf-live',
+    url: 'https://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:' + btnData.foundDoi + '&direct=true&site=ftf-live',
     success : function(data) {
       var proxyUrl = $(data).find('a[data-auto=guest-login-link]').attr('href');
       proxyUrl = proxyUrl.split('?url=')[0] + '?url=';
@@ -114,8 +115,8 @@ BibCNRSButton.prototype.hrefWalker = function (rootElt) {
     $(elt).addClass('bibcnrs-button-link-visited');
 
     setTimeout(() => {
-      elt.href = decodeURIComponent(elt.href);
-      let matches = elt.href.match(self.doiPatternInURL);
+      let href = decodeURIComponent(elt.href);
+      let matches = href.match(self.doiPatternInURL);
       if (matches && matches[2]) {
         let doi = matches[2];
         console.log('DOI FOUND', doi);
@@ -165,18 +166,85 @@ BibCNRSButton.prototype.textWalker = function (rootElt) {
 };
 
 /**
+ * Walk through the DOM and search for raw text and replace
+ * found DOI by a nice link then add it to the button hooking queue.
+ */
+BibCNRSButton.prototype.textWalker2 = function(domNode, prefixStatus) {
+  self = this;
+  var prefix = prefixStatus || false;
+
+  // only process valid dom nodes
+  if (domNode === null || !domNode.getElementsByTagName) {
+    return prefix;
+  }
+
+  // if the node is already clickable
+  if ((domNode.tagName === 'a') || ((domNode.tagName === 'A'))) {
+    return false;
+  }
+
+  // we do not process user input text area
+  if ((domNode.tagName === 'textarea') || (domNode.tagName === 'TEXTAREA')) {
+    return false;
+  }
+
+  var childNodes = domNode.childNodes, childNode, spanElm, i = 0;
+
+  while ((childNode = childNodes[i])) {
+    if (childNode.nodeType === 3) { // text node found, do the replacement
+      var text = childNode.textContent;
+      if (text) {
+        var matchDOI = text.match(self.doiPatternInText);
+        if (matchDOI) {
+          spanElm = document.createElement('span');
+          //spanElm.setAttribute('name', 'ISTEXInserted');
+
+          if (matchDOI) {
+            spanElm.innerHTML = text.replace(self.doiPatternInText, '<a href="http://dx.doi.org/$1" class="bibcnrs-button-link-visited">$1</a>');
+            text = spanElm.innerHTML;
+          }
+
+          domNode.replaceChild(spanElm, childNode);
+          childNode = spanElm;
+          text      = spanElm.innerHTML;
+          prefix    = false;
+
+          // send the DOI links to the button hooking queue
+          $(spanElm).find('a.bibcnrs-button-link-visited').each(function (idX, doiLinkElt) {
+            $(doiLinkElt).attr('href', 'http://dx.doi.org/' + $(doiLinkElt).text());
+            self.queue.push({ foundDoi: $(doiLinkElt).text(), domElt: doiLinkElt });
+          });
+
+        } else if (text.length > 0) {
+          if (!text.match(self.skipPattern)) {
+            prefix = false;
+          }
+        }
+      }
+    } else if (childNode.nodeType === 1) { // not a text node but an element node, we look forward
+      prefix = self.textWalker2(childNode, prefix);
+    }
+    i++;
+  }
+
+  return prefix;
+};
+
+/**
  * Listen for DOM dynamic modifications
  * and walk into it to try to detect DOI inside.
  */
 BibCNRSButton.prototype.watchDomModifications = function () {
   var self = this;
-  $(document).bind("DOMSubtreeModified", function (event) {
-    if ($(event.target).hasClass('bibcnrs-button-link-visited')) return;
-    self.hrefWalker(event.target);
-    self.textWalker(event.target);
+  var mutationObserver = new MutationObserver(function (mutationRecords) {
+    $.each(mutationRecords, function (index, mutationRecord) {
+      mutationRecord.addedNodes.forEach((elt) => {
+        self.textWalker2(elt);
+        self.hrefWalker(elt);
+      });
+    });
   });
+  mutationObserver.observe(document.body, { childList: true, attributes: false, subtree: false });
 };
 
-
 module.exports = BibCNRSButton;
-

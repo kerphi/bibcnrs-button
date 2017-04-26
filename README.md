@@ -15,6 +15,7 @@ Same as above but on real wikipedia and wiley pages.
   - https://en.wikipedia.org/wiki/Superfluid_helium-4
   - https://link.springer.com/article/10.1007/s12205-015-1634-z
   - https://link.springer.com/article/10.1007%2Fs10728-017-0342-x
+  - https://link.springer.com/article/10.1007/s00701-016-2835-z
 
 ### npm run debug:prod
 
