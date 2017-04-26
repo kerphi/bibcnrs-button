@@ -115,8 +115,8 @@ BibCNRSButton.prototype.hrefWalker = function (rootElt) {
     $(elt).addClass('bibcnrs-button-link-visited');
 
     setTimeout(() => {
-      elt.href = decodeURIComponent(elt.href);
-      let matches = elt.href.match(self.doiPatternInURL);
+      let href = decodeURIComponent(elt.href);
+      let matches = href.match(self.doiPatternInURL);
       if (matches && matches[2]) {
         let doi = matches[2];
         console.log('DOI FOUND', doi);
