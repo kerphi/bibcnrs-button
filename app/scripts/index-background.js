@@ -1,13 +1,27 @@
 import 'babel-polyfill';
 
-console.log('Hello world from the background!');
+// ok matching url example:
+// http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:10.1007/s00701-016-2835-z&direct=true&site=ftf-live
+console.log('BACKGROUND');    
+// not in the cache so ask EBSCO !
+// $.ajax({
+//   url: 'http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:10.1007/s00701-016-2835-z&direct=true&site=ftf-live',
+//   success : function (data) {
+//     console.log('BACKGROUND AJAX OK', data);    
+//   },
+//   error: function (jqXHR, textStatus, errorThrown) {
+//     console.log('BACKGROUND AJAX ERROR', jqXHR, textStatus, errorThrown);
+//   }
+// });
 
-// let a = {o: 1};
-// var x = Object.assign({}, a, {b: 1});
-
-// setTimeout(() => { console.log('My Timeout') }, 4000);
-
-// //console.log($(body).attr('id'));
-
-// var currentUrl = window.location.href;
-// console.log('HELLO FROM BACKGROUND', currentUrl)
+// chrome.runtime.onConnect.addListener(function(port) {
+//   port.onMessage.addListener(function(msg) {
+//     console.log('MSG RECEIVED IN THE BACK', msg, port);
+//     if (msg.joke == "Knock knock")
+//       port.postMessage({question: "Who's there?"});
+//     else if (msg.answer == "Madame")
+//       port.postMessage({question: "Madame who?"});
+//     else if (msg.answer == "Madame... Bovary")
+//       port.postMessage({question: "I don't get it."});
+//   });
+// });
