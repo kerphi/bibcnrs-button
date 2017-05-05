@@ -1,6 +1,5 @@
 import $       from './bibcnrs-jquery.js';
 import queue   from 'async/queue';
-import lscache from 'lscache';
 import util    from 'util';
 import u       from './bibcnrs-utils.js';
 
@@ -10,7 +9,8 @@ function BibCNRSButton(options) {
   var self  = this;
 
   options          = options || {};
-  
+  self.checkIfDoiIsAvailableFromTheBack = options.checkIfDoiIsAvailableFromTheBack;
+
   // 1 mounth by default for the cache
   self.cacheTTL    = options.cacheTTL || 60*24*30; 
 
@@ -24,13 +24,14 @@ function BibCNRSButton(options) {
   self.queueConcurrency = 1;
   self.queue = queue(
     (btnData, cb) => {
-      self.checkIfDoiIsAvailable(btnData, function (found, btnData2) {
-        console.log('MMMMM', found, u.debug(btnData2));
+      self.checkIfDoiIsAvailableFromTheBack(btnData.foundDoi, function (found, result) {
         if (found) {
+          let btnData2 = Object.assign({}, btnData, {btnUrl : result.btnUrl});
           self.tryToHookAButton(btnData2, cb);
         } else {
           return cb();
         }
+        return cb();
       });
     },
     self.queueConcurrency
@@ -39,51 +40,51 @@ function BibCNRSButton(options) {
 util.inherits(BibCNRSButton, EventEmitter);
 module.exports = BibCNRSButton;
 
-/**
- * Checks if the DOI is available in the subscribed 
- * BibCNRS packages thanks to EBSCO FTF
- */
-BibCNRSButton.prototype.checkIfDoiIsAvailable = function (btnData, cb) {
-  var self = this;
+// /**
+//  * Checks if the DOI is available in the subscribed 
+//  * BibCNRS packages thanks to EBSCO FTF
+//  */
+// BibCNRSButton.prototype.checkIfDoiIsAvailable = function (btnData, cb) {
+//   var self = this;
 
-  // check if this AJAX response is stored in the cache or not
-  let cachedData = lscache.get(btnData.foundDoi)
-  if (cachedData) {
-    if (cachedData.found) {
-      console.log('DOI IS AVAILABLE (cached)', btnData.foundDoi);
-    } else {
-      console.log('DOI IS NOT AVAILABLE (cached)', btnData.foundDoi);
-    }
-    return cb(cachedData.found, Object.assign({}, btnData, cachedData));
-  }
+//   // check if this AJAX response is stored in the cache or not
+//   let cachedData = lscache.get(btnData.foundDoi)
+//   if (cachedData) {
+//     if (cachedData.found) {
+//       console.log('DOI IS AVAILABLE (cached)', btnData.foundDoi);
+//     } else {
+//       console.log('DOI IS NOT AVAILABLE (cached)', btnData.foundDoi);
+//     }
+//     return cb(cachedData.found, Object.assign({}, btnData, cachedData));
+//   }
 
-  // ok matching url example:
-  // http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:10.1007/s00701-016-2835-z&direct=true&site=ftf-live
+//   // ok matching url example:
+//   // http://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:10.1007/s00701-016-2835-z&direct=true&site=ftf-live
 
-  // not in the cache so ask EBSCO !
-  $.ajax({
-    url: 'https://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:' + btnData.foundDoi + '&direct=true&site=ftf-live',
-    success : function(data) {
-      var proxyUrl = $(data).find('a[data-auto=guest-login-link]').attr('href');
-      proxyUrl = proxyUrl.split('?url=')[0] + '?url=';
-      var linkoutUrl = $(data).find('div.ftf-results a[data-auto=menu-link]').attr('href');
-      if (linkoutUrl) {
-        console.log('DOI IS AVAILABLE', btnData.foundDoi);
-        lscache.set(btnData.foundDoi, { found: 1, btnUrl: proxyUrl + this.url }, self.cacheTTL);
-        return cb(1, Object.assign({}, btnData, { btnUrl: proxyUrl + this.url }));
-      } else {
-        console.log('DOI IS NOT AVAILABLE', btnData.foundDoi);
-        lscache.set(btnData.foundDoi, { found: 0 }, self.cacheTTL);
-        return cb(0);
-      }
-    },
-    error: function(jqXHR, textStatus, errorThrown) {
-      console.log('AJAX ERROR', jqXHR, textStatus, errorThrown);
-      return cb(0);
-    }
-  });
+//   // not in the cache so ask EBSCO !
+//   $.ajax({
+//     url: 'https://search.ebscohost.com/login.aspx?authtype=guest&custid=ns257146&groupid=main&profile=ftf&id=DOI:' + btnData.foundDoi + '&direct=true&site=ftf-live',
+//     success : function(data) {
+//       var proxyUrl = $(data).find('a[data-auto=guest-login-link]').attr('href');
+//       proxyUrl = proxyUrl.split('?url=')[0] + '?url=';
+//       var linkoutUrl = $(data).find('div.ftf-results a[data-auto=menu-link]').attr('href');
+//       if (linkoutUrl) {
+//         console.log('DOI IS AVAILABLE', btnData.foundDoi);
+//         lscache.set(btnData.foundDoi, { found: 1, btnUrl: proxyUrl + this.url }, self.cacheTTL);
+//         return cb(1, Object.assign({}, btnData, { btnUrl: proxyUrl + this.url }));
+//       } else {
+//         console.log('DOI IS NOT AVAILABLE', btnData.foundDoi);
+//         lscache.set(btnData.foundDoi, { found: 0 }, self.cacheTTL);
+//         return cb(0);
+//       }
+//     },
+//     error: function(jqXHR, textStatus, errorThrown) {
+//       console.log('AJAX ERROR', jqXHR, textStatus, errorThrown);
+//       return cb(0);
+//     }
+//   });
 
-};
+// };
 
 /**
  * Hook a HTML button in the web page where 
@@ -91,10 +92,11 @@ BibCNRSButton.prototype.checkIfDoiIsAvailable = function (btnData, cb) {
  */
 BibCNRSButton.prototype.tryToHookAButton = function (btnData, cb) {
   var self = this;
-  console.log('HOOK A BUTTON ON THIS DOI', btnData.foundDoi, btnData.btnUrl);
+  //console.log('HOOK A BUTTON ON THIS DOI', btnData.foundDoi, btnData.btnUrl);
 
   var domBtnLink = $('<a target="_blank" href="" class="bibcnrs-button-link"></a>').attr('href', btnData.btnUrl);
-  var domBtnBox  = $('<span class="bibcnrs-button-box"></span').text('BibCNRS INEE');
+//  var domBtnBox  = $('<span class="bibcnrs-button-box"></span').text('BibCNRS INEE');
+  var domBtnBox  = $('<span class="bibcnrs-button-box"></span').text('BibCNRS');
   var domBtnIcon = $('<span class="bibcnrs-button-icon"></span>');
 
   domBtnLink.append(domBtnBox);
@@ -119,7 +121,7 @@ BibCNRSButton.prototype.hrefWalker = function (rootElt) {
       let matches = href.match(self.doiPatternInURL);
       if (matches && matches[2]) {
         let doi = matches[2];
-        console.log('DOI FOUND', doi);
+        //console.log('DOI FOUND', doi);
         self.queue.push({ foundDoi: doi, domElt: elt });
       }
     }, 10);

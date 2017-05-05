@@ -54,6 +54,7 @@
     "async": "^2.3.0",
     "browserify-shim": "^3.8.14",
     "jquery": "^3.2.1",
-    "lscache": "^1.1.0"
+    "lscache": "^1.1.0",
+    "uuid": "^3.0.1"
   }
 }
