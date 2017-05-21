@@ -25,3 +25,6 @@ Same as above but with the as in production build. This could be used to debug p
 
 It will compile all the things ready for production in dist/ folder.
 
+### npm run build:crx
+
+It will create the bibcnrs-button-1.2.0.crx ready to install in your browser.
