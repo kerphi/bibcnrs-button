@@ -16,7 +16,7 @@ function BibCNRSButton(options) {
 
   self.myopt       = options.myopt || 'coucou';
   self.doiPatternInURL  = /\/\/(doi\.org|dx\.doi\.org|doi\.acm\.org|dx\.crossref\.org).*\/(10\..*(\/|%2(F|f)).*)/;
-  self.doiPatternInText = new RegExp('(10\\.\\d{4,5}\\/[\\S]+[^;,.\\s])', 'gi');
+  self.doiPatternInText = new RegExp('(10\\.\\d{4,5}\\/[\\S]+[^;,.<>\\s])', 'gi');
   self.skipPattern      = new RegExp('^[:\\/\\s]+$', 'i');
 
   // handle found DOI in the DOM asynchrononsly
